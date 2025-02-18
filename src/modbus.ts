@@ -1,26 +1,22 @@
-// create an empty modbus client
-const ModbusRTU = require("modbus-serial");
-const client = new ModbusRTU();
+import ModbusRTU from 'modbus-serial';
 
-try{
-  await client.connectRTUBuffered('/dev/ttyUSB0', {baudRate:9600})
+async function connectModbus() {
+  const client = new ModbusRTU();
+
+  try {
+    await client.connectRTUBuffered('/dev/ttyUSB0', { baudRate: 9600 }); // Connected to serial port
+    console.log('Modbus connection success');
+
+    client.setID(1); // set slave ID
+
+    // reading Data : holding register에서 0번부터 125(최대)개의 값 읽기
+    const data = await client.readHoldingRegisters(0, 125);
+    console.log('Data:', data.data);
+  } catch (error) {
+    console.error('Error:', error);
+  } finally {
+    client.close();
+  }
 }
 
-// open connection to a serial port
-client.connectRTUBuffered("/dev/ttyUSB0", { baudRate: 9600 }, write);
-
-function write() {
-    client.setID(1);
-
-    // write the values 0, 0xffff to registers starting at address 5
-    // on device number 1.
-    client.writeRegisters(5, [0 , 0xffff])
-        .then(read);
-}
-
-function read() {
-    // read the 2 registers starting at address 5
-    // on device number 1.
-    client.readHoldingRegisters(5, 2)
-        .then(console.log);
-}
+connectModbus();
