@@ -13,11 +13,11 @@
     "lodash": "^4.17.21",
     "modbus-serial": "^8.0.18",
     "mqtt": "^5.10.3",
-    "prettier": "^3.5.1",
     "serialport": "^13.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.13.4",
+    "prettier": "^3.5.1",
     "typescript": "^5.7.3"
   }
 }
