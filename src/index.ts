@@ -1,4 +1,6 @@
-import { SerialPort } from "serialport";
+import { SerialPort, ReadlineParser } from "serialport";
+import mqtt from 'mqtt'
+
 
 // Create a port
 const port = new SerialPort({
