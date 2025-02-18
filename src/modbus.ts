@@ -19,4 +19,4 @@ async function connectModbus() {
   }
 }
 
-connectModbus();
+setInterval(connectModbus, 1000)
