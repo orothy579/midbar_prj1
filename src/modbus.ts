@@ -11,7 +11,7 @@ const SERIAL_PORT = '/dev/ttyV0'
 const BAUD_RATE = 9600
 const SLAVE_ID = 0
 const REGISTER_START = 0
-const REGISTER_COUNT = 1
+const REGISTER_COUNT = 3
 
 // mqttClient 생성
 const mqttClient = mqtt.connect(MQTT_URL, {
@@ -25,10 +25,7 @@ async function initModbus() {
     try {
         if (!modbusClient.isOpen) {
             await modbusClient.connectRTUBuffered(SERIAL_PORT, {
-                baudRate: 9600,
-                stopBits: 1,
-                dataBits: 8,
-                parity: 'none',
+                baudRate: BAUD_RATE,
             })
             modbusClient.setID(SLAVE_ID)
             console.log('Modbus connection successed')
@@ -50,7 +47,9 @@ async function readModbusData() {
         console.log('Data:', data.data)
 
         const payload = JSON.stringify({
-            data: data.data,
+            data1: data.data[0],
+            data2: data.data[1],
+            data3: data.data[2],
         })
 
         mqttClient.publish('v1/devices/me/telemetry', payload, () => {

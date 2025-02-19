@@ -30,7 +30,7 @@ port.on('data', (data: Buffer) => {
         )
 
         // 응답 패킷 생성
-        const response = Buffer.alloc(3 + quantity * 2) // Slave ID(1) + Function Code(1) + Byte Count(1) + Data(N)
+        const response = Buffer.alloc(3 + quantity * 2) // Slave ID(0) + Function Code(1) + Byte Count(1) + Data(N)
         response[0] = data[0] // Slave ID
         response[1] = 0x03 // Function Code
         response[2] = quantity * 2 // Byte Count (Register 개수 * 2 바이트)
