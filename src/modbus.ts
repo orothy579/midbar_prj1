@@ -7,11 +7,11 @@ const MQTT_BROKER_IP = process.env.MQTT_BROKER_IP || 'localhost'
 const MQTT_URL = `mqtt://${MQTT_BROKER_IP}:1883`
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN
 
-const SERIAL_PORT = '/dev/ttyUSB0'
+const SERIAL_PORT = '/dev/ttyV0'
 const BAUD_RATE = 9600
-const SLAVE_ID = 1
+const SLAVE_ID = 0
 const REGISTER_START = 0
-const REGISTER_COUNT = 125
+const REGISTER_COUNT = 1
 
 // mqttClient 생성
 const mqttClient = mqtt.connect(MQTT_URL, {
@@ -24,9 +24,14 @@ const modbusClient = new ModbusRTU()
 async function initModbus() {
     try {
         if (!modbusClient.isOpen) {
-            await modbusClient.connectRTUBuffered(SERIAL_PORT, { baudRate: BAUD_RATE })
-            console.log('Modbus connection successed')
+            await modbusClient.connectRTUBuffered(SERIAL_PORT, {
+                baudRate: 9600,
+                stopBits: 1,
+                dataBits: 8,
+                parity: 'none',
+            })
             modbusClient.setID(SLAVE_ID)
+            console.log('Modbus connection successed')
         }
     } catch (error) {
         console.error('Modbus connection error:', error)
@@ -34,6 +39,7 @@ async function initModbus() {
 }
 
 async function readModbusData() {
+    console.log('Start polling modbus data')
     try {
         if (!modbusClient.isOpen) {
             console.log('Modbus connection lost. Reconnecting...')
