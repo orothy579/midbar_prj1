@@ -15,7 +15,8 @@
         "lodash": "^4.17.21",
         "modbus-serial": "^8.0.18",
         "mqtt": "^5.10.3",
-        "serialport": "^13.0.0"
+        "serialport": "^13.0.0",
+        "ts-node": "^10.9.2"
     },
     "devDependencies": {
         "@types/node": "^22.13.4",

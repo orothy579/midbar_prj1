@@ -11,7 +11,7 @@ const SERIAL_PORT = '/dev/ttyV0'
 const BAUD_RATE = 9600
 const SLAVE_ID = 0
 const REGISTER_START = 0
-const REGISTER_COUNT = 3
+const REGISTER_COUNT = 2
 
 // mqttClient 생성
 const mqttClient = mqtt.connect(MQTT_URL, {
@@ -20,6 +20,13 @@ const mqttClient = mqtt.connect(MQTT_URL, {
 
 // Modbus 클라이언트 생성
 const modbusClient = new ModbusRTU()
+
+function modbusRegistersToFloat(registers: number[]): number {
+    const buffer = Buffer.alloc(4) // 4바이트 버퍼 생성
+    buffer.writeUInt16BE(registers[0], 0) // MSB 먼저 저장
+    buffer.writeUInt16BE(registers[1], 2) // LSB 저장
+    return buffer.readFloatBE(0) // 32비트 Float으로 변환
+}
 
 async function initModbus() {
     try {
@@ -44,12 +51,11 @@ async function readModbusData() {
         }
         // Reading holding register
         const data = await modbusClient.readHoldingRegisters(REGISTER_START, REGISTER_COUNT)
-        console.log('Data:', data.data)
+        const floatData = modbusRegistersToFloat(data.data)
+        console.log('Data:', floatData)
 
         const payload = JSON.stringify({
-            data1: data.data[0],
-            data2: data.data[1],
-            data3: data.data[2],
+            data1: floatData,
         })
 
         mqttClient.publish('v1/devices/me/telemetry', payload, () => {

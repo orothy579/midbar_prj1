@@ -9,13 +9,16 @@ const BAUD_RATE = 9600
 const port = new SerialPort({
     path: SERIAL_PORT,
     baudRate: BAUD_RATE,
-    parity: 'none',
-    stopBits: 1,
-    dataBits: 8,
 })
 
-// Holding Registers 초기 데이터 (예제)
-const holdingRegisters = [7, 8]
+function floatRegisters(value: number): number[] {
+    const buffer = Buffer.alloc(4)
+    buffer.writeFloatBE(value)
+    return [buffer.readUInt16BE(0), buffer.readUInt16BE(2)]
+}
+
+// Holding Registers 초기 데이터
+const holdingRegisters = floatRegisters(20.5)
 
 // Master의 요청을 감지하고 처리
 port.on('data', (data: Buffer) => {
