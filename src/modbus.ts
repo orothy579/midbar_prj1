@@ -28,7 +28,7 @@ async function connectModbus() {
 
         // reading Data : holding register에서 0번부터 125(최대)개의 값 읽기
         const data = await modbusClient.readHoldingRegisters(REGISTER_START, REGISTER_COUNT)
-        console.log('Data:', data.data)
+        console.log("Data:", data.data)
 
         const payload = JSON.stringify({
             data: data.data,
