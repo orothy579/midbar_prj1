@@ -1,10 +1,11 @@
 import { SerialPort } from 'serialport'
+import crc from 'crc'
 
 // 사용할 시리얼 포트
 const SERIAL_PORT = '/dev/ttyV1'
 const BAUD_RATE = 9600
 
-// 🔹 SerialPort 인스턴스 생성 (Slave 역할)
+// SerialPort 인스턴스 생성 (Slave 역할)
 const port = new SerialPort({
     path: SERIAL_PORT,
     baudRate: BAUD_RATE,
@@ -13,42 +14,44 @@ const port = new SerialPort({
     dataBits: 8,
 })
 
-// 🔹 초기 Holding Register 값 (Modbus Slave가 반환할 데이터)
-const holdingRegisters: number[] = [123, 456, 789, 321, 654]
+// Holding Registers 초기 데이터 (예제)
+const holdingRegisters = [7, 8]
 
-// 🔹 요청 데이터 수신 감지
+// Master의 요청을 감지하고 처리
 port.on('data', (data: Buffer) => {
-    console.log('📡 Master Request Received (HEX):', data.toString('hex'))
+    console.log('Request Received:', data.toString('hex'))
 
-    // Modbus Request 패킷 분석 (Function Code 03: Read Holding Registers)
-    if (data.length >= 6 && data[1] === 0x03) {
+    if (data.length >= 8 && data[1] === 3) {
         const startAddress = data.readUInt16BE(2) // 요청된 시작 주소
         const quantity = data.readUInt16BE(4) // 요청된 레지스터 개수
 
         console.log(
-            `📌 Master 요청 - Function: 03, Start Address: ${startAddress}, Quantity: ${quantity}`
+            `Request info : Function: ${data[1]}, Start Address: ${startAddress}, Quantity: ${quantity}`
         )
 
-        // 🔹 요청된 개수만큼 데이터 응답 준비
-        const response = Buffer.alloc(3 + quantity * 2 + 2) // 응답 프레임 크기
+        // 응답 패킷 생성
+        const response = Buffer.alloc(3 + quantity * 2) // Slave ID(1) + Function Code(1) + Byte Count(1) + Data(N)
         response[0] = data[0] // Slave ID
         response[1] = 0x03 // Function Code
-        response[2] = quantity * 2 // 데이터 길이
+        response[2] = quantity * 2 // Byte Count (Register 개수 * 2 바이트)
 
-        // 레지스터 데이터 채우기
+        // 요청된 개수만큼 레지스터 데이터 채우기
         for (let i = 0; i < quantity; i++) {
-            response.writeUInt16BE(holdingRegisters[startAddress + i] || 0, 3 + i * 2)
+            const registerValue = holdingRegisters[startAddress + i]
+            response.writeUInt16BE(registerValue, 3 + i * 2) // Big Endian 저장
         }
 
-        // CRC 계산 (간단한 더미 값, 실제 구현 시 CRC 계산 필요)
-        response[response.length - 2] = 0x00
-        response[response.length - 1] = 0x00
+        // CRC 추가
+        const crcValue = crc.crc16modbus(response)
+        const crcBuffer = Buffer.from([crcValue & 0xff, (crcValue >> 8) & 0xff])
 
-        // 🔹 Master에게 응답 전송
-        port.write(response, () => {
-            console.log('🟢 Response Sent (HEX):', response.toString('hex'))
+        const finalResponse = Buffer.concat([response, crcBuffer])
+
+        // Master에게 응답 전송
+        port.write(finalResponse, () => {
+            console.log('Response Sent (HEX):', finalResponse.toString('hex'))
         })
     }
 })
 
-console.log(`🚀 Modbus RTU Slave 시작: ${SERIAL_PORT}`)
+console.log(`Modbus started : ${SERIAL_PORT}`)
