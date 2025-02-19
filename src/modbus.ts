@@ -1,7 +1,7 @@
 import dotenv from 'dotenv'
 require('dotenv').config()
 import ModbusRTU from 'modbus-serial'
-import mqtt, { MqttClient } from 'mqtt'
+import mqtt from 'mqtt'
 
 const MQTT_BROKER_IP = process.env.MQTT_BROKER_IP || 'localhost'
 const MQTT_URL = `mqtt://{MQTT_BROKER_IP}:1883`
