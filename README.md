@@ -26,6 +26,7 @@
 | **Modbus RTU** | 센서 데이터 읽기 (Master, Slave 시뮬레이터 포함) |
 | **MQTT**       | 데이터 전송 (IoT 메시지 브로커)                  |
 | **PostgreSQL** | 데이터 저장 및 관리                              |
+| **Thingsboard** | 데이터 전체 관리 |
 
 ---
 
