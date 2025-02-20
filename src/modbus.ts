@@ -2,6 +2,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 import ModbusRTU from 'modbus-serial'
 import mqtt from 'mqtt'
+import { Pool } from 'pg'
 
 const MQTT_BROKER_IP = process.env.MQTT_BROKER_IP || 'localhost'
 const MQTT_URL = `mqtt://${MQTT_BROKER_IP}:1883`
@@ -12,6 +13,15 @@ const BAUD_RATE = 9600
 const SLAVE_ID = 0
 const REGISTER_START = 0
 const REGISTER_COUNT = 6
+
+// postgresql 연결
+const dbPool = new Pool({
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: parseInt(process.env.DB_PORT || '5432'),
+})
 
 // mqttClient 생성
 const mqttClient = mqtt.connect(MQTT_URL, {
@@ -45,6 +55,19 @@ async function initModbus() {
     }
 }
 
+async function saveToDb(data1: number, data2: number, data3: number) {
+    try {
+        const query = {
+            text: 'INSERT INTO modbus_data(data1, data2, data3) VALUES($1, $2, $3)',
+            values: [data1, data2, data3],
+        }
+        await dbPool.query(query)
+        console.log('Data saved to DB')
+    } catch (error) {
+        console.error('DB error:', error)
+    }
+}
+
 async function readModbusData() {
     console.log('Reading modbus data...')
     try {
@@ -63,9 +86,13 @@ async function readModbusData() {
             data3: floatData[2],
         })
 
+        // mqtt 로 data 전송
         mqttClient.publish('v1/devices/me/telemetry', payload, () => {
             console.log(`Published: ${payload}`)
         })
+
+        // postgresql에 data 저장
+        await saveToDb(floatData[0], floatData[1], floatData[2])
     } catch (error) {
         console.error('Error reading modbus data:', error)
     }
