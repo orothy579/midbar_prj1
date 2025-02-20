@@ -11,14 +11,23 @@ const port = new SerialPort({
     baudRate: BAUD_RATE,
 })
 
-function floatRegisters(value: number): number[] {
-    const buffer = Buffer.alloc(4)
-    buffer.writeFloatBE(value)
-    return [buffer.readUInt16BE(0), buffer.readUInt16BE(2)]
+function floatArrayToModbusRegisters(values: number[]): number[] {
+    const buffer = Buffer.alloc(values.length * 4) // Float 개수 * 4바이트 할당
+
+    values.forEach((value, index) => {
+        buffer.writeFloatBE(value, index * 4) // Float 값을 4바이트 단위로 저장
+    })
+
+    const registers: number[] = []
+    for (let i = 0; i < buffer.length; i += 2) {
+        registers.push(buffer.readUInt16BE(i)) // 16비트씩 읽어서 배열에 추가
+    }
+
+    return registers
 }
 
 // Holding Registers 초기 데이터
-const holdingRegisters = floatRegisters(20.5)
+const holdingRegisters = floatArrayToModbusRegisters([20.5, 12.34, 45.67])
 
 // Master의 요청을 감지하고 처리
 port.on('data', (data: Buffer) => {
