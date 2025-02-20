@@ -29,7 +29,7 @@ function floatArrayToModbusRegisters(values: number[]): number[] {
 }
 
 // Holding Registers 초기 데이터
-const holdingRegisters = floatArrayToModbusRegisters([24.5, 12.34, 45.67])
+const holdingRegisters = floatArrayToModbusRegisters([40, 160, 130])
 
 // Master의 요청을 감지하고 처리
 port.on('data', (data: Buffer) => {
