@@ -21,23 +21,22 @@ const mqttClient = mqtt.connect(MQTT_URL, {
 // Modbus 클라이언트 생성
 const modbusClient = new ModbusRTU()
 
-function modbusRegistersToFloats(registers: number[]): number[] {
-    const floatValues: number[] = []
+// 16bit 레지스터 값을 float(32bit)로 변환
+function RegistersToFloats(registers: number[]): number[] {
+    const values: number[] = []
     for (let i = 0; i < registers.length; i += 2) {
         const buffer = Buffer.alloc(4)
         buffer.writeUInt16BE(registers[i], 0) // MSB
         buffer.writeUInt16BE(registers[i + 1], 2) // LSB
-        floatValues.push(buffer.readFloatBE(0)) // Float 변환 후 배열에 저장
+        values.push(buffer.readFloatBE(0)) // Float 변환 후 배열에 저장
     }
-    return floatValues
+    return values
 }
 
 async function initModbus() {
     try {
         if (!modbusClient.isOpen) {
-            await modbusClient.connectRTUBuffered(SERIAL_PORT, {
-                baudRate: BAUD_RATE,
-            })
+            await modbusClient.connectRTUBuffered(SERIAL_PORT, { baudRate: BAUD_RATE })
             modbusClient.setID(SLAVE_ID)
             console.log('Modbus connection successed')
         }
@@ -55,7 +54,7 @@ async function readModbusData() {
         }
         // Reading holding register
         const data = await modbusClient.readHoldingRegisters(REGISTER_START, REGISTER_COUNT)
-        const floatData = modbusRegistersToFloats(data.data)
+        const floatData = RegistersToFloats(data.data)
         // console.log('Data:', floatData)
 
         const payload = JSON.stringify({
