@@ -11,6 +11,7 @@ const port = new SerialPort({
     baudRate: BAUD_RATE,
 })
 
+// float data를 array로 전송
 function floatArrayToModbusRegisters(values: number[]): number[] {
     const buffer = Buffer.alloc(values.length * 4) // Float 개수 * 4바이트 할당
 

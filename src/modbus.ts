@@ -56,10 +56,12 @@ async function readModbusData() {
         // Reading holding register
         const data = await modbusClient.readHoldingRegisters(REGISTER_START, REGISTER_COUNT)
         const floatData = modbusRegistersToFloats(data.data)
-        console.log('Data:', floatData)
+        // console.log('Data:', floatData)
 
         const payload = JSON.stringify({
-            data1: floatData,
+            data1: floatData[0],
+            data2: floatData[1],
+            data3: floatData[2],
         })
 
         mqttClient.publish('v1/devices/me/telemetry', payload, () => {
