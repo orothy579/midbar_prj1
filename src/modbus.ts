@@ -46,7 +46,6 @@ async function initModbus() {
 }
 
 async function readModbusData() {
-    console.log('Start polling modbus data')
     try {
         if (!modbusClient.isOpen) {
             console.log('Modbus connection lost. Reconnecting...')

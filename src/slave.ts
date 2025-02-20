@@ -13,26 +13,27 @@ const port = new SerialPort({
 
 // float data를 array로 전송
 function floatArrayToModbusRegisters(values: number[]): number[] {
-    const buffer = Buffer.alloc(values.length * 4) // Float 개수 * 4바이트 할당
+    // Float data개수 * 4바이트 할당
+    const buffer = Buffer.alloc(values.length * 4)
+    for (let i = 0; i < values.length; i++) {
+        buffer.writeFloatBE(values[i], i * 4)
+    }
 
-    values.forEach((value, index) => {
-        buffer.writeFloatBE(value, index * 4) // Float 값을 4바이트 단위로 저장
-    })
-
+    // 16비트씩 읽어서 배열에 추가
     const registers: number[] = []
     for (let i = 0; i < buffer.length; i += 2) {
-        registers.push(buffer.readUInt16BE(i)) // 16비트씩 읽어서 배열에 추가
+        registers.push(buffer.readUInt16BE(i))
     }
 
     return registers
 }
 
 // Holding Registers 초기 데이터
-const holdingRegisters = floatArrayToModbusRegisters([20.5, 12.34, 45.67])
+const holdingRegisters = floatArrayToModbusRegisters([24.5, 12.34, 45.67])
 
 // Master의 요청을 감지하고 처리
 port.on('data', (data: Buffer) => {
-    console.log('Request Received:', data.toString('hex'))
+    // console.log('Request Received:', data.toString('hex'))
 
     if (data.length >= 8 && data[1] === 3) {
         const startAddress = data.readUInt16BE(2) // 요청된 시작 주소
@@ -43,7 +44,7 @@ port.on('data', (data: Buffer) => {
         )
 
         // 응답 패킷 생성
-        const response = Buffer.alloc(3 + quantity * 2) // Slave ID(0) + Function Code(1) + Byte Count(1) + Data(N)
+        const response = Buffer.alloc(3 + quantity * 2) // Slave ID(1) + Function Code(1) + Byte Count(1) + Data(N)
         response[0] = data[0] // Slave ID
         response[1] = 0x03 // Function Code
         response[2] = quantity * 2 // Byte Count (Register 개수 * 2 바이트)
@@ -51,16 +52,16 @@ port.on('data', (data: Buffer) => {
         // 요청된 개수만큼 레지스터 데이터 채우기
         for (let i = 0; i < quantity; i++) {
             const registerValue = holdingRegisters[startAddress + i]
-            response.writeUInt16BE(registerValue, 3 + i * 2) // Big Endian 저장
+            response.writeUInt16BE(registerValue, 3 + i * 2)
         }
 
-        // CRC 추가
+        // CRC
         const crcValue = crc.crc16modbus(response)
         const crcBuffer = Buffer.from([crcValue & 0xff, (crcValue >> 8) & 0xff])
 
         const finalResponse = Buffer.concat([response, crcBuffer])
 
-        // Master에게 응답 전송
+        //Master에게 응답 전송
         port.write(finalResponse, () => {
             console.log('Response Sent (HEX):', finalResponse.toString('hex'))
         })
