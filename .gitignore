@@ -135,5 +135,5 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-modbusData.csv
+modbusData.csvcom
 node_modules

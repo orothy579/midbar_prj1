@@ -23,7 +23,7 @@ const dbPool = new Pool({
     port: parseInt(process.env.DB_PORT || '5432'),
 })
 
-// mqttClient 생성
+// mqtt 클라이언트 생성
 const mqttClient = mqtt.connect(MQTT_URL, {
     username: ACCESS_TOKEN,
 })
@@ -55,7 +55,7 @@ async function initModbus() {
     }
 }
 
-async function saveToDb(data1: number, data2: number, data3: number) {
+async function saveTodb(data1: number, data2: number, data3: number) {
     try {
         const query = {
             text: 'INSERT INTO modbus_data(data1, data2, data3) VALUES($1, $2, $3)',
@@ -92,19 +92,19 @@ async function readModbusData() {
         })
 
         // postgresql에 data 저장
-        await saveToDb(floatData[0], floatData[1], floatData[2])
+        await saveTodb(floatData[0], floatData[1], floatData[2])
     } catch (error) {
         console.error('Error reading modbus data:', error)
     }
 }
 
-async function startPolling() {
+async function start() {
     await initModbus()
     setInterval(readModbusData, 1000)
 }
 
-// master로서 slave 의 data polling 시도
-startPolling()
+// master로서 slave 의 data를 받는다.
+start()
 
 mqttClient.on('connect', () => {
     console.log('Connected to ThingsBoard MQTT')

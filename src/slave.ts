@@ -1,5 +1,6 @@
 import { SerialPort } from 'serialport'
 import crc from 'crc'
+import { faker } from '@faker-js/faker'
 
 // 사용할 시리얼 포트
 const SERIAL_PORT = '/dev/ttyV1'
@@ -29,7 +30,20 @@ function floatArrayToModbusRegisters(values: number[]): number[] {
 }
 
 // Holding Registers 초기 데이터
-const holdingRegisters = floatArrayToModbusRegisters([140.78, 60.89, 30.12])
+let holdingRegisters = floatArrayToModbusRegisters([
+    faker.number.float({ max: 100 }),
+    faker.number.float({ max: 100 }),
+    faker.number.float({ max: 100 }),
+])
+
+setInterval(() => {
+    holdingRegisters = floatArrayToModbusRegisters([
+        faker.number.float({ max: 100 }),
+        faker.number.float({ max: 100 }),
+        faker.number.float({ max: 100 }),
+    ])
+    console.log('Updated holdingRegisters:', holdingRegisters)
+}, 5000)
 
 // Master의 요청을 감지하고 처리
 port.on('data', (data: Buffer) => {

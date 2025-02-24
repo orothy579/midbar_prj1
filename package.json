@@ -20,6 +20,7 @@
         "ts-node": "^10.9.2"
     },
     "devDependencies": {
+        "@faker-js/faker": "^9.5.0",
         "@types/node": "^22.13.4",
         "@types/pg": "^8.11.11",
         "prettier": "^3.5.1",

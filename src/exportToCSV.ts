@@ -12,7 +12,7 @@ const dbPool = new Pool({
     port: parseInt(process.env.DB_PORT || '5432'),
 })
 
-const filePath = path.join('.', 'modbusData.csv')
+const filePath = path.join('./data', 'modbusData.csv')
 
 async function exportToCSV() {
     try {
