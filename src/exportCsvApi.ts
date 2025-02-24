@@ -49,7 +49,6 @@ const app = new Hono()
 // csv 파일 다운로드
 app.get('/', async (c) => {
     try {
-        console.log('Exporting to CSV...')
         const result = await exportToCSV()
 
         const csvFile = await fs.readFile(filePath, { encoding: 'utf-8' })
