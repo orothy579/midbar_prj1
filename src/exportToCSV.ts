@@ -1,6 +1,7 @@
 import dotenv from 'dotenv'
 dotenv.config()
-import { Pool } from 'pg'
+import pkg from 'pg'
+const { Pool } = pkg
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
 import fs from 'fs/promises'
