@@ -43,7 +43,7 @@ setInterval(() => {
         faker.number.float({ max: 100 }),
     ])
     console.log('Updated holdingRegisters:', holdingRegisters)
-}, 5000)
+}, 10000)
 
 // Master의 요청을 감지하고 처리
 port.on('data', (data: Buffer) => {

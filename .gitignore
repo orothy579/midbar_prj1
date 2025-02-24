@@ -137,3 +137,5 @@ dist
 
 modbusData.csvcom
 node_modules
+
+./data/modbusData.csv

@@ -100,7 +100,7 @@ async function readModbusData() {
 
 async function start() {
     await initModbus()
-    setInterval(readModbusData, 1000)
+    setInterval(readModbusData, 5000)
 }
 
 // master로서 slave 의 data를 받는다.

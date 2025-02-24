@@ -1,7 +1,9 @@
 import dotenv from 'dotenv'
 dotenv.config()
 import { Pool } from 'pg'
-import fs from 'fs'
+import { Hono } from 'hono'
+import { serve } from '@hono/node-server'
+import fs from 'fs/promises'
 import path from 'path'
 
 const dbPool = new Pool({
@@ -33,7 +35,7 @@ async function exportToCSV() {
         const data = result.rows.map((row) => Object.values(row).join(',')).join('\n')
 
         // cvs 파일 생성
-        fs.writeFileSync(filePath, header + data, { encoding: 'utf-8' })
+        await fs.writeFile(filePath, header + data, { encoding: 'utf-8' })
 
         console.log('Exported to', filePath)
     } catch (error) {
@@ -41,4 +43,22 @@ async function exportToCSV() {
     }
 }
 
-exportToCSV()
+const app = new Hono()
+
+// csv 파일 다운로드
+app.get('/', async (c) => {
+    try {
+        console.log('Exporting to CSV...')
+        const result = await exportToCSV()
+
+        const csvFile = await fs.readFile(filePath, { encoding: 'utf-8' })
+
+        c.header('Content-Type', 'text/csv')
+        c.header('Content-Disposition', 'attachment; filename=modbusData.csv')
+        return c.text(csvFile)
+    } catch (err) {
+        return c.json({ error: err }, 500)
+    }
+})
+
+serve(app)
