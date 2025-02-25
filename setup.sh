@@ -16,7 +16,7 @@ sudo usermod -aG sudo "$USERNAME"
 # 패키지 업데이트
 echo "system update and install the packages..." | tee -a $LOGFILE
 sudo apt-get update -y && sudo apt-get upgrade -y
-
+sudo apt install -y git wget unzip nodejs npm
 
 # thingsboard 설치
 echo "thingsboard installation..." | tee -a $LOGFILE
@@ -72,3 +72,31 @@ sudo /usr/share/thingsboard/bin/install/install.sh --loadDemo
 sudo service thingsboard start
 
 echo "ThingsBoard installation completed..." | tee -a $LOGFILE
+
+# ----------------------------
+# modbus source 코드 다운로드
+INSTALL_DIR="~/$USER/modbus"
+DIST_DIR="https://github.com/orothy579/midbar_prj1/releases/latest/download/dist.zip"
+
+mkdir -p "$INSTALL_DIR"
+cd "$INSTALL_DIR"
+wget -O dist.zip $DIST_DIR
+unzip dist.zip
+rm dist.zip  # 압축 해제 후 zip 파일 삭제
+
+#socat 으로 가상 시리얼 포트 생성 및 권한 설정
+echo "socat virtual serial port creation..." | tee -a $LOGFILE
+sudo apt install -y socat
+sudo socat pty,raw,echo=0,link=/dev/ttyV0 pty,raw,echo=0,link=/dev/ttyV1
+sudo chmod 777 /dev/ttyV*
+
+
+# PM2 설치 및 실행 설정
+echo "PM2 설치 및 실행..."
+sudo npm install -g pm2
+pm2 start "$INSTALL_DIR/dist/modbus.js"
+pm2 save
+pm2 startup
+sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u $USERNAME --hp /home/$USERNAME
+
+echo "✅ auto installation completed: $(date)" | tee -a $LOGFILE
