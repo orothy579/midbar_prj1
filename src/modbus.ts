@@ -68,6 +68,8 @@ async function saveTodb(data1: number, data2: number, data3: number) {
     }
 }
 
+let prevData: number[] | null = null
+
 async function readModbusData() {
     console.log('Reading modbus data...')
     try {
@@ -80,19 +82,30 @@ async function readModbusData() {
         const floatData = RegistersToFloats(data.data)
         // console.log('Data:', floatData)
 
-        const payload = JSON.stringify({
-            data1: floatData[0],
-            data2: floatData[1],
-            data3: floatData[2],
-        })
+        // prevData가 null이면 최초 data 저장
+        if (prevData === null) {
+            prevData = floatData.slice() // shallow copy
+        } else {
+            const payload = JSON.stringify({
+                data1: Math.abs(floatData[0] - prevData[0]),
+                data2: Math.abs(floatData[1] - prevData[1]),
+                data3: Math.abs(floatData[2] - prevData[2]),
+            })
 
-        // mqtt 로 data 전송
-        mqttClient.publish('v1/devices/me/telemetry', payload, () => {
-            console.log(`Published: ${payload}`)
-        })
+            // mqtt 로 data 전송
+            mqttClient.publish('v1/devices/me/telemetry', payload, () => {
+                console.log(`Published: ${payload}`)
+            })
 
-        // postgresql에 data 저장
-        await saveTodb(floatData[0], floatData[1], floatData[2])
+            // postgresql에 data 저장
+            await saveTodb(
+                Math.abs(floatData[0] - prevData[0]),
+                Math.abs(floatData[1] - prevData[1]),
+                Math.abs(floatData[2] - prevData[2])
+            )
+            // console.log(`current data : ${floatData[0]} prev data : ${prevData[0]}`)
+            prevData = floatData.slice()
+        }
     } catch (error) {
         console.error('Error reading modbus data:', error)
     }
