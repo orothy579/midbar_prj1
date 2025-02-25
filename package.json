@@ -19,6 +19,7 @@
         "modbus-serial": "^8.0.18",
         "mqtt": "^5.10.3",
         "pg": "^8.13.3",
+        "pg-query-stream": "^4.7.3",
         "serialport": "^13.0.0",
         "ts-node": "^10.9.2"
     },

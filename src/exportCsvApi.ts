@@ -1,11 +1,11 @@
 import dotenv from 'dotenv'
 dotenv.config()
 import pkg from 'pg'
-const { Pool } = pkg
+import QueryStream = require('pg-query-stream')
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
-import fs from 'fs/promises'
-import path from 'path'
+import { stream } from 'hono/streaming'
+const { Pool } = pkg
 
 const dbPool = new Pool({
     user: process.env.DB_USER,
@@ -15,50 +15,34 @@ const dbPool = new Pool({
     port: parseInt(process.env.DB_PORT || '5432'),
 })
 
-const filePath = path.join('./data', 'modbusData.csv')
-
-async function exportToCSV() {
-    try {
-        const client = await dbPool.connect()
-        const qeury = 'SELECT * FROM modbus_data ORDER BY timestamp DESC'
-        const result = await client.query(qeury)
-        client.release()
-
-        if (result.rows.length === 0) {
-            console.log('No data to export')
-            return
-        }
-
-        // csv header 생성
-        const header = Object.keys(result.rows[0]).join(',') + '\n'
-
-        // csv 데이터 생성
-        const data = result.rows.map((row) => Object.values(row).join(',')).join('\n')
-
-        // cvs 파일 생성
-        await fs.writeFile(filePath, header + data, { encoding: 'utf-8' })
-
-        console.log('Exported to', filePath)
-    } catch (error) {
-        console.error('Export to CSV error:', error)
-    }
-}
-
 const app = new Hono()
 
-// csv 파일 다운로드
-app.get('/', async (c) => {
-    try {
-        const result = await exportToCSV()
+// api-server. localhost:3000
+app.get('/', (c) => {
+    // 헤더 설정: 브라우저가 CSV 파일로 다운로드하도록 지정
+    c.header('Content-Type', 'text/csv')
+    c.header('Content-Disposition', 'attachment; filename="Data.csv"')
+    return stream(c, async (stream) => {
+        const client = await dbPool.connect()
+        const query = new QueryStream('SELECT * FROM modbus_data ORDER BY id DESC')
+        const result = client.query(query)
 
-        const csvFile = await fs.readFile(filePath, { encoding: 'utf-8' })
+        // 스트림 중단
+        stream.onAbort(() => {
+            console.log('Aborted!')
+        })
 
-        c.header('Content-Type', 'text/csv')
-        c.header('Content-Disposition', 'attachment; filename=modbusData.csv')
-        return c.text(csvFile)
-    } catch (err) {
-        return c.json({ error: err }, 500)
-    }
+        let isFirstRow = true
+        // DB 스트림을 한 행씩 읽으면서 처리
+        for await (const row of result) {
+            if (isFirstRow) {
+                await stream.write(Object.keys(row).join(',') + '\n') //첫째 행이면 헤더 추가
+                isFirstRow = false
+            }
+            await stream.write(Object.values(row).join(',') + '\n')
+        }
+        client.release()
+    })
 })
 
 serve(app)
