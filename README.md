@@ -36,6 +36,7 @@
 ### **1️⃣ 환경 설정**
 
 ```sh
+wget "https://github.com/orothy579/midbar_prj1/releases/latest/download/setup.sh"
 chmod +x setup.sh
 sudo ./setup.sh
 ```
