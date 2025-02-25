@@ -17,7 +17,7 @@ const dbPool = new Pool({
 
 const app = new Hono()
 
-// api-server. localhost:3000
+// api-server
 app.get('/', (c) => {
     c.header('Content-Type', 'text/csv')
     c.header('Content-Disposition', 'attachment; filename="Data.csv"')
