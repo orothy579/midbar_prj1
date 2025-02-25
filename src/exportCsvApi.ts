@@ -19,15 +19,14 @@ const app = new Hono()
 
 // api-server. localhost:3000
 app.get('/', (c) => {
-    // 헤더 설정: 브라우저가 CSV 파일로 다운로드하도록 지정
     c.header('Content-Type', 'text/csv')
     c.header('Content-Disposition', 'attachment; filename="Data.csv"')
+
     return stream(c, async (stream) => {
         const client = await dbPool.connect()
         const query = new QueryStream('SELECT * FROM modbus_data ORDER BY id DESC')
         const result = client.query(query)
 
-        // 스트림 중단
         stream.onAbort(() => {
             console.log('Aborted!')
         })
