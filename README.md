@@ -19,14 +19,14 @@
 
 ## 🏗 **기술 스택**
 
-| 기술           | 설명                                             |
-| -------------- | ------------------------------------------------ |
-| **Node.js**    | 백엔드 실행 환경                                 |
-| **TypeScript** | 정적 타입 지원 개발 언어                         |
-| **Modbus RTU** | 센서 데이터 읽기 (Master, Slave 시뮬레이터 포함) |
-| **MQTT**       | 데이터 전송 (IoT 메시지 브로커)                  |
-| **PostgreSQL** | 데이터 저장 및 관리                              |
-| **Thingsboard** | 데이터 전체 관리 |
+| 기술            | 설명                                             |
+| --------------- | ------------------------------------------------ |
+| **Node.js**     | 백엔드 실행 환경                                 |
+| **TypeScript**  | 정적 타입 지원 개발 언어                         |
+| **Modbus RTU**  | 센서 데이터 읽기 (Master, Slave 시뮬레이터 포함) |
+| **MQTT**        | 데이터 전송 (IoT 메시지 브로커)                  |
+| **PostgreSQL**  | 데이터 저장 및 관리                              |
+| **Thingsboard** | 데이터 전체 관리                                 |
 
 ---
 
@@ -34,9 +34,7 @@
 
 ### **1️⃣ 환경 설정**
 
-#### **Node.js & TypeScript 설치**
-
 ```sh
-sudo apt update && sudo apt install -y nodejs npm
-npm install -g typescript ts-node
+chmod +x setup.sh
+sudo ./setup.sh
 ```
