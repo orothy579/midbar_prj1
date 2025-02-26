@@ -28,6 +28,7 @@
 | **MQTT**        | 데이터 전송 (IoT 메시지 브로커)                  |
 | **PostgreSQL**  | 데이터 저장 및 관리                              |
 | **Thingsboard** | 데이터 전체 관리                                 |
+| **hono**        | csv 파일 다운로드 api-server 제공                 |
 
 ---
 
