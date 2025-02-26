@@ -1,13 +1,12 @@
-#!/bin/bash
+# #!/bin/bash
 
 set -e  # 에러 발생 시 즉시 종료
 export DEBIAN_FRONTEND=noninteractive
 
 
 LOGFILE="/home/$(whoami)/setup.log"
-# echo "✅ Auto installation started: $(date)" | tee -a "$LOGFILE"
+echo "✅ Auto installation started: $(date)" | tee -a "$LOGFILE"
 
-# 현재 로그인한 사용자 감지
 USERNAME=$(whoami)
 echo "User detected: $USERNAME" | tee -a "$LOGFILE"
 
@@ -18,12 +17,14 @@ sudo usermod -aG sudo "$USERNAME"
 # 패키지 업데이트 및 필수 패키지 설치
 echo "🔹 System update and install required packages..." | tee -a "$LOGFILE"
 sudo apt-get update -y && sudo apt-get upgrade -y
-sudo apt install -y git wget unzip nodejs npm openjdk-17-jdk socat
+sudo apt-get install -y git wget unzip npm openjdk-17-jdk socat vim
+
+
 
 # ThingsBoard 설치
 echo "🔹 ThingsBoard installation..." | tee -a "$LOGFILE"
 sudo update-alternatives --auto java
-# wget https://github.com/thingsboard/thingsboard/releases/download/v3.9.1/thingsboard-3.9.1.deb
+wget https://github.com/thingsboard/thingsboard/releases/download/v3.9.1/thingsboard-3.9.1.deb
 sudo dpkg -i thingsboard-3.9.1.deb
 
 # PostgreSQL 설치
@@ -53,6 +54,18 @@ sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '1234';"
 
 echo "Creating ThingsBoard database..."
 sudo -u postgres psql -c "CREATE DATABASE thingsboard;"
+
+echo "Creating modbus database..."
+sudo -u postgres psql -c "CREATE DATABASE modbus;"
+
+sudo -u postgres psql -d modbus -c "CREATE TABLE modbus_data(
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMPTZ DEFAULT NOW(),
+    data1 FLOAT,
+    data2 FLOAT,
+    data3 FLOAT
+);"
+
 
 echo "PostgreSQL initial setup complete."
 
@@ -84,6 +97,27 @@ echo "✅ ThingsBoard installation completed..." | tee -a "$LOGFILE"
 
 sudo npm install -g pm2
 
+#!/bin/bash
+HOME="/home/$(whoami)"
+# fnm 설치
+curl -fsSL https://fnm.vercel.app/install | bash
+
+# fnm 설치 경로 설정
+export FNM_DIR="$HOME/.local/share/fnm"
+export PATH="$FNM_DIR:$PATH"
+
+# 현재 셸에서 fnm 초기화
+eval "$(fnm env)"
+
+# Node.js 버전 22 설치 및 사용 설정
+fnm install 22
+fnm use 22
+
+# Node.js 및 npm 버전 확인
+node -v  # 예상 출력: v22.x.x
+npm -v   # 예상 출력: x.x.x
+
+
 # Modbus 소스 코드 다운로드
 INSTALL_DIR="/home/$(whoami)/modbus"
 REPO_URL="https://github.com/orothy579/midbar_prj1.git"
@@ -97,6 +131,6 @@ sudo npm install
 # socat으로 가상 시리얼 포트 생성 및 권한 설정
 echo "🔹 Creating virtual serial port with socat..." | tee -a "$LOGFILE"
 pm2 start "sudo socat -d -d pty,raw,echo=0,link=/dev/ttyV0 pty,raw,echo=0,link=/dev/ttyV1"
-pm2 start "sudo chmod 777 /dev/ttyV*"
+sudo chmod 777 /dev/ttyV*
 
 echo "✅ Auto installation completed: $(date)" | tee -a "$LOGFILE"
