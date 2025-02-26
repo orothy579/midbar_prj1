@@ -38,7 +38,7 @@
 ```sh
 #setup.sh 실행
 chmod +x setup.sh
-ssh [username]@[hostname] "bash-s" < ./setup.sh
+ssh [username]@[hostname] "bash -s" < ./setup.sh
 
 #.env 파일 생성하고 .env.sample을 참고하여 작성해주세요.
 # ACCESS TOKEN 과 MQTT_BORKER_IP을 적어주시면 됩니다.
