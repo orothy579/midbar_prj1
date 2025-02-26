@@ -36,6 +36,18 @@
 ### **1️⃣ 환경 설정**
 
 ```sh
+#setup.sh 실행
 chmod +x setup.sh
 ssh [username]@[hostname] "bash-s" < ./setup.sh
+
+#.env 파일은 .env.sample을 참고하여 작성해주세요,
+
+# 실행 설정
+pm2 start "node  your_path/midbar_prj1/dist/modbus.js"
+pm2 start "node  your_path/midbar_prj1/dist/slave.js"
+pm2 start "node  your_path/midbar_prj1/dist/exportCsvApi.js"
+pm2 save > /dev/null 2>&1
+sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u "$USERNAME" --hp "/home/$USERNAME"
+pm2 startup systemd > /dev/null 2>&1
+
 ```
