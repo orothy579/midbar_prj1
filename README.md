@@ -28,7 +28,7 @@
 | **MQTT**        | 데이터 전송 (IoT 메시지 브로커)                  |
 | **PostgreSQL**  | 데이터 저장 및 관리                              |
 | **Thingsboard** | 데이터 전체 관리                                 |
-| **hono**        | csv 파일 다운로드 api-server 제공                 |
+| **hono**        | csv 파일 다운로드 api-server 제공                |
 
 ---
 
@@ -42,16 +42,19 @@ chmod +x setup.sh
 ssh [username]@[hostname] "bash -s" < ./setup.sh
 
 #.env 파일 생성하고 .env.sample을 참고하여 작성해주세요.
+
 # ACCESS TOKEN 과 MQTT_BORKER_IP을 적어주시면 됩니다.
 
 # 실행 설정
-pm2 start "node  your_path/midbar_prj1/dist/modbus.js"
-pm2 start "node  your_path/midbar_prj1/dist/slave.js"
-pm2 start "node  your_path/midbar_prj1/dist/exportCsvApi.js"
+
+pm2 start "node your_path/midbar_prj1/dist/modbus.js"
+pm2 start "node your_path/midbar_prj1/dist/slave.js"
+pm2 start "node your_path/midbar_prj1/dist/exportCsvApi.js"
 pm2 save
 pm2 startup
 
 # things board에서 csv 파일 다운로드 받는 법
+
 1. dashboard
 2. button widget 생성
 3. url 에 http://hostname:3000 입력
