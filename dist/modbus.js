@@ -39,6 +39,20 @@ const mqttClient = mqtt_1.default.connect(MQTT_URL, {
 });
 // Modbus 클라이언트 생성
 const modbusClient = new modbus_serial_1.default();
+// ThingsBoard RPC
+mqttClient.on('connect', () => {
+    console.log('Connected to ThingsBoard MQTT');
+    mqttClient.subscribe('v1/devices/me/rpc/request/+');
+});
+mqttClient.on('message', (topic, message) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('request.topic:', topic);
+    console.log('request.body:', message.toString());
+    var requestId = topic.slice('v1/devices/me/rpc/request/'.length);
+    mqttClient.publish('v1/devices/me/rpc/response/' + requestId, message);
+}));
+mqttClient.on('error', (err) => {
+    console.error('MQTT error:', err);
+});
 // 16bit 레지스터 값을 float(32bit)로 변환
 function RegistersToFloats(registers) {
     const values = [];
@@ -125,9 +139,3 @@ function start() {
 }
 // master로서 slave 의 data를 받는다.
 start();
-mqttClient.on('connect', () => {
-    console.log('Connected to ThingsBoard MQTT');
-});
-mqttClient.on('error', (err) => {
-    console.error('MQTT error:', err);
-});
