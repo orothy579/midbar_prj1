@@ -45,7 +45,7 @@ mqttClient.on('connect', () => {
     mqttClient.subscribe('v1/devices/me/rpc/request/+');
 });
 mqttClient.on('message', (topic, message) => __awaiter(void 0, void 0, void 0, function* () {
-    var requestId = topic.slice('v1/devices/me/rpc/request/'.length);
+    let requestId = topic.slice('v1/devices/me/rpc/request/'.length);
     const payload = JSON.parse(message.toString());
     const method = payload.method;
     const params = payload.params;
@@ -53,6 +53,7 @@ mqttClient.on('message', (topic, message) => __awaiter(void 0, void 0, void 0, f
     console.log('request params: ', params);
     let response;
     let ledState = false; // example IO
+    let fanState = false; // example IO
     switch (method) {
         case 'getLed':
             response = {
@@ -65,6 +66,19 @@ mqttClient.on('message', (topic, message) => __awaiter(void 0, void 0, void 0, f
             response = {
                 status: 'ok',
                 ledState: ledState,
+            };
+            break;
+        case 'getFan':
+            response = {
+                status: 'ok',
+                fanState: fanState,
+            };
+            break;
+        case 'setFan':
+            fanState = params;
+            response = {
+                status: 'ok',
+                fanState: fanState,
             };
             break;
         default:
@@ -113,7 +127,7 @@ function saveTodb(data1, data2, data3) {
                 values: [data1, data2, data3],
             };
             yield dbPool.query(query);
-            // console.log('Data saved to DB')
+            console.log('Data saved to DB');
         }
         catch (error) {
             console.error('DB error:', error);
@@ -123,7 +137,7 @@ function saveTodb(data1, data2, data3) {
 let prevData = null;
 function readModbusData() {
     return __awaiter(this, void 0, void 0, function* () {
-        // console.log('Reading modbus data...')
+        console.log('Reading modbus data...');
         try {
             if (!modbusClient.isOpen) {
                 console.log('Modbus connection lost. Reconnecting...');
@@ -132,7 +146,7 @@ function readModbusData() {
             // Reading holding register
             const data = yield modbusClient.readHoldingRegisters(REGISTER_START, REGISTER_COUNT);
             const floatData = RegistersToFloats(data.data);
-            // console.log('Data:', floatData)
+            console.log('Data:', floatData);
             // prevData가 null이면 최초 data 저장
             if (prevData === null) {
                 prevData = floatData.slice(); // shallow copy
@@ -145,7 +159,7 @@ function readModbusData() {
                 });
                 // mqtt 로 data 전송
                 mqttClient.publish('v1/devices/me/telemetry', payload, () => {
-                    // console.log(`Published: ${payload}`)
+                    console.log(`Published: ${payload}`);
                 });
                 // postgresql에 data 저장
                 yield saveTodb(Math.abs(floatData[0] - prevData[0]), Math.abs(floatData[1] - prevData[1]), Math.abs(floatData[2] - prevData[2]));

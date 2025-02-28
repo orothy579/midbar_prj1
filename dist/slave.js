@@ -40,11 +40,11 @@ setInterval(() => {
         faker_1.faker.number.float({ max: 100 }),
         faker_1.faker.number.float({ max: 100 }),
     ]);
-    console.log('Updated holdingRegisters:', holdingRegisters);
+    // console.log('Updated holdingRegisters:', holdingRegisters)
 }, 5000);
 // Master의 요청을 감지하고 처리
 port.on('data', (data) => {
-    // console.log('Request Received:', data.toString('hex'))
+    console.log('Request Received:', data.toString('hex'));
     if (data.length >= 8 && data[1] === 3) {
         const startAddress = data.readUInt16BE(2); // 요청된 시작 주소
         const quantity = data.readUInt16BE(4); // 요청된 레지스터 개수
