@@ -17,6 +17,8 @@ dotenv_1.default.config();
 const modbus_serial_1 = __importDefault(require("modbus-serial"));
 const mqtt_1 = __importDefault(require("mqtt"));
 const pg_1 = require("pg");
+const mqtt_router_1 = require("./mqtt-router");
+const zod_1 = require("zod");
 const MQTT_BROKER_IP = process.env.MQTT_BROKER_IP || 'localhost';
 const MQTT_URL = `mqtt://${MQTT_BROKER_IP}:1883`;
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
@@ -44,6 +46,37 @@ mqttClient.on('connect', () => {
     console.log('Connected to ThingsBoard MQTT');
     mqttClient.subscribe('v1/devices/me/rpc/request/+');
 });
+const router = new mqtt_router_1.MqttRouter();
+mqttClient.on('message', (topic, message) => {
+    try {
+        router.handle(topic, message);
+    }
+    catch (err) {
+        console.error('Router handling error:', err);
+    }
+});
+const deviceControlSchema = zod_1.z.object({
+    method: zod_1.z.string(),
+    params: zod_1.z.boolean(),
+});
+const deviceStateSchema = zod_1.z.object({
+    led: deviceControlSchema,
+    fan: deviceControlSchema,
+});
+const deviceStatus = {
+    led: {
+        method: '',
+        params: false,
+    },
+    fan: {
+        method: '',
+        params: false,
+    },
+};
+router.match('v1/devices/me/rpc/request/', deviceStateSchema.partial(), (message) => {
+    Object.assign(deviceStatus, message);
+});
+// router 핸들러 추가 필요 ! !
 mqttClient.on('message', (topic, message) => __awaiter(void 0, void 0, void 0, function* () {
     let requestId = topic.slice('v1/devices/me/rpc/request/'.length);
     const payload = JSON.parse(message.toString());

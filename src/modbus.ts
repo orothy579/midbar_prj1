@@ -1,9 +1,10 @@
-import { r } from '@faker-js/faker/dist/airline-BcEu2nRk'
 import dotenv from 'dotenv'
 dotenv.config()
 import ModbusRTU from 'modbus-serial'
 import mqtt from 'mqtt'
 import { Pool } from 'pg'
+import { MqttRouter } from './mqtt-router'
+import { z } from 'zod'
 
 const MQTT_BROKER_IP = process.env.MQTT_BROKER_IP || 'localhost'
 const MQTT_URL = `mqtt://${MQTT_BROKER_IP}:1883`
@@ -38,6 +39,42 @@ mqttClient.on('connect', () => {
     mqttClient.subscribe('v1/devices/me/rpc/request/+')
 })
 
+const router = new MqttRouter()
+
+mqttClient.on('message', (topic, message) => {
+    try {
+        router.handle(topic, message)
+    } catch (err) {
+        console.error('Router handling error:', err)
+    }
+})
+
+const deviceControlSchema = z.object({
+    method: z.string(),
+    params: z.boolean(),
+})
+
+const deviceStateSchema = z.object({
+    led: deviceControlSchema,
+    fan: deviceControlSchema,
+})
+
+const deviceStatus = {
+    led: {
+        method: '',
+        params: false,
+    },
+    fan: {
+        method: '',
+        params: false,
+    },
+}
+
+router.match('v1/devices/me/rpc/request/', deviceStateSchema.partial(), (message) => {
+    Object.assign(deviceStatus, message)
+})
+
+// router 핸들러 추가 필요 ! !
 mqttClient.on('message', async (topic, message) => {
     let requestId = topic.slice('v1/devices/me/rpc/request/'.length)
     const payload = JSON.parse(message.toString())
