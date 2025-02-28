@@ -1,3 +1,4 @@
+import { r } from '@faker-js/faker/dist/airline-BcEu2nRk'
 import dotenv from 'dotenv'
 dotenv.config()
 import ModbusRTU from 'modbus-serial'
@@ -38,10 +39,41 @@ mqttClient.on('connect', () => {
 })
 
 mqttClient.on('message', async (topic, message) => {
-    console.log('request.topic:', topic)
-    console.log('request.body:', message.toString())
     var requestId = topic.slice('v1/devices/me/rpc/request/'.length)
-    mqttClient.publish('v1/devices/me/rpc/response/' + requestId, message)
+    const payload = JSON.parse(message.toString())
+    const method = payload.method
+    const params = payload.params
+
+    console.log('request method: ', method)
+    console.log('request params: ', params)
+
+    let response
+    let ledState = false // example IO
+
+    switch (method) {
+        case 'getLed':
+            response = {
+                status: 'ok',
+                ledState: ledState,
+            }
+            break
+        case 'setLed':
+            ledState = params
+            response = {
+                status: 'ok',
+                ledState: ledState,
+            }
+            break
+        default:
+            response = {
+                status: 'error',
+                message: 'Unkwon method',
+            }
+            break
+    }
+
+    console.log('response: ', response)
+    mqttClient.publish('v1/devices/me/rpc/response/' + requestId, JSON.stringify(response))
 })
 
 mqttClient.on('error', (err) => {
@@ -79,7 +111,7 @@ async function saveTodb(data1: number, data2: number, data3: number) {
             values: [data1, data2, data3],
         }
         await dbPool.query(query)
-        console.log('Data saved to DB')
+        // console.log('Data saved to DB')
     } catch (error) {
         console.error('DB error:', error)
     }
@@ -88,7 +120,7 @@ async function saveTodb(data1: number, data2: number, data3: number) {
 let prevData: number[] | null = null
 
 async function readModbusData() {
-    console.log('Reading modbus data...')
+    // console.log('Reading modbus data...')
     try {
         if (!modbusClient.isOpen) {
             console.log('Modbus connection lost. Reconnecting...')
@@ -111,7 +143,7 @@ async function readModbusData() {
 
             // mqtt 로 data 전송
             mqttClient.publish('v1/devices/me/telemetry', payload, () => {
-                console.log(`Published: ${payload}`)
+                // console.log(`Published: ${payload}`)
             })
 
             // postgresql에 data 저장
