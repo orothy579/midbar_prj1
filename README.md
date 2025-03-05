@@ -60,4 +60,6 @@ pm2 startup
 3. url 에 http://hostname:3000 입력
 4. save
 
+# grafana update 예정
+
 ```
