@@ -3,15 +3,13 @@ dotenv.config()
 import ModbusRTU from 'modbus-serial'
 import mqtt from 'mqtt'
 import { Pool } from 'pg'
-import { MqttRouter } from './mqtt-router'
-import { any, z } from 'zod'
 
 const MQTT_BROKER_IP = process.env.MQTT_BROKER_IP || 'localhost'
 const MQTT_URL = `mqtt://${MQTT_BROKER_IP}:1883`
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN
 
-const SERIAL_PORT = '/dev/ttyV0'
-const BAUD_RATE = 9600
+const SERIAL_PORT = '/dev/ttyV0' // 시리얼포트 번호에 맞게 변해야 한다.
+const BAUD_RATE = 9600 // baud rate에 맞게 변경해야 한다.
 const SLAVE_ID = 0
 const REGISTER_START = 0
 const REGISTER_COUNT = 6
@@ -32,62 +30,6 @@ const mqttClient = mqtt.connect(MQTT_URL, {
 
 // Modbus 클라이언트 생성
 const modbusClient = new ModbusRTU()
-
-// ThingsBoard RPC
-mqttClient.on('connect', () => {
-    console.log('Connected to ThingsBoard MQTT')
-    mqttClient.subscribe('v1/devices/me/rpc/request/+')
-})
-
-const router = new MqttRouter()
-
-let ledState = false
-let fanState = false
-
-mqttClient.on('message', (topic, message) => {
-    try {
-        router.handle(topic, message)
-    } catch (err) {
-        console.error('Router handling error:', err)
-    }
-})
-
-const commandSchema = z.object({
-    method: z.string(),
-    params: z.boolean().optional(),
-})
-
-// RPC 통신 시뮬레이션
-router.match('v1/devices/me/rpc/request/+', commandSchema, (message, topic) => {
-    let requestId = topic.slice('v1/devices/me/rpc/request/'.length)
-    let payload = message
-    console.log('payload : ', payload)
-
-    let response
-
-    switch (payload.method) {
-        case 'getLed':
-            response = { status: 'ok', ledState: ledState }
-            break
-        case 'setLed':
-            ledState = payload.params!
-            response = { status: 'ok', ledState: ledState }
-            break
-        case 'getFan':
-            response = { status: 'ok', fanState: fanState }
-            break
-        case 'setFan':
-            fanState = payload.params!
-            response = { status: 'ok', fanState: fanState }
-            break
-        default:
-            response = { status: 'error', message: 'Unknown method' }
-            break
-    }
-
-    console.log('Response:', response)
-    mqttClient.publish('v1/devices/me/rpc/response/' + requestId, JSON.stringify(response))
-})
 
 mqttClient.on('error', (err) => {
     console.error('MQTT error:', err)

@@ -20,7 +20,7 @@ function floatArrayToModbusRegisters(values: number[]): number[] {
         buffer.writeFloatBE(values[i], i * 4)
     }
 
-    // 16비트씩 읽어서 배열에 추가
+    // 2바이트씩 읽어서 배열에 추가
     const registers: number[] = []
     for (let i = 0; i < buffer.length; i += 2) {
         registers.push(buffer.readUInt16BE(i))
