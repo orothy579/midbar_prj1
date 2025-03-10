@@ -47,6 +47,8 @@ mqttClient.on('connect', () => {
     mqttClient.subscribe('v1/devices/me/rpc/request/+');
 });
 const router = new mqtt_router_1.MqttRouter();
+let ledState = false;
+let fanState = false;
 mqttClient.on('message', (topic, message) => {
     try {
         router.handle(topic, message);
@@ -55,75 +57,37 @@ mqttClient.on('message', (topic, message) => {
         console.error('Router handling error:', err);
     }
 });
-const deviceControlSchema = zod_1.z.object({
+const commandSchema = zod_1.z.object({
     method: zod_1.z.string(),
-    params: zod_1.z.boolean(),
+    params: zod_1.z.boolean().optional(),
 });
-const deviceStateSchema = zod_1.z.object({
-    led: deviceControlSchema,
-    fan: deviceControlSchema,
-});
-const deviceStatus = {
-    led: {
-        method: '',
-        params: false,
-    },
-    fan: {
-        method: '',
-        params: false,
-    },
-};
-router.match('v1/devices/me/rpc/request/', deviceStateSchema.partial(), (message) => {
-    Object.assign(deviceStatus, message);
-});
-// router 핸들러 추가 필요 ! !
-mqttClient.on('message', (topic, message) => __awaiter(void 0, void 0, void 0, function* () {
+router.match('v1/devices/me/rpc/request/+', commandSchema, (message, topic) => {
     let requestId = topic.slice('v1/devices/me/rpc/request/'.length);
-    const payload = JSON.parse(message.toString());
-    const method = payload.method;
-    const params = payload.params;
-    console.log('request method: ', method);
-    console.log('request params: ', params);
+    let payload = message;
+    console.log('payload : ', payload);
     let response;
-    let ledState = false; // example IO
-    let fanState = false; // example IO
-    switch (method) {
+    switch (payload.method) {
         case 'getLed':
-            response = {
-                status: 'ok',
-                ledState: ledState,
-            };
+            response = { status: 'ok', ledState: ledState };
             break;
         case 'setLed':
-            ledState = params;
-            response = {
-                status: 'ok',
-                ledState: ledState,
-            };
+            ledState = payload.params;
+            response = { status: 'ok', ledState: ledState };
             break;
         case 'getFan':
-            response = {
-                status: 'ok',
-                fanState: fanState,
-            };
+            response = { status: 'ok', fanState: fanState };
             break;
         case 'setFan':
-            fanState = params;
-            response = {
-                status: 'ok',
-                fanState: fanState,
-            };
+            fanState = payload.params;
+            response = { status: 'ok', fanState: fanState };
             break;
         default:
-            response = {
-                status: 'error',
-                message: 'Unkwon method',
-            };
+            response = { status: 'error', message: 'Unknown method' };
             break;
     }
-    console.log('response: ', response);
+    console.log('Response:', response);
     mqttClient.publish('v1/devices/me/rpc/response/' + requestId, JSON.stringify(response));
-}));
+});
 mqttClient.on('error', (err) => {
     console.error('MQTT error:', err);
 });

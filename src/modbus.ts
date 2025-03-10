@@ -4,7 +4,7 @@ import ModbusRTU from 'modbus-serial'
 import mqtt from 'mqtt'
 import { Pool } from 'pg'
 import { MqttRouter } from './mqtt-router'
-import { z } from 'zod'
+import { any, z } from 'zod'
 
 const MQTT_BROKER_IP = process.env.MQTT_BROKER_IP || 'localhost'
 const MQTT_URL = `mqtt://${MQTT_BROKER_IP}:1883`
@@ -41,6 +41,9 @@ mqttClient.on('connect', () => {
 
 const router = new MqttRouter()
 
+let ledState = false
+let fanState = false
+
 mqttClient.on('message', (topic, message) => {
     try {
         router.handle(topic, message)
@@ -49,81 +52,39 @@ mqttClient.on('message', (topic, message) => {
     }
 })
 
-const deviceControlSchema = z.object({
+const commandSchema = z.object({
     method: z.string(),
-    params: z.boolean(),
+    params: z.boolean().optional(),
 })
 
-const deviceStateSchema = z.object({
-    led: deviceControlSchema,
-    fan: deviceControlSchema,
-})
-
-const deviceStatus = {
-    led: {
-        method: '',
-        params: false,
-    },
-    fan: {
-        method: '',
-        params: false,
-    },
-}
-
-router.match('v1/devices/me/rpc/request/', deviceStateSchema.partial(), (message) => {
-    Object.assign(deviceStatus, message)
-})
-
-// router 핸들러 추가 필요 ! !
-mqttClient.on('message', async (topic, message) => {
+router.match('v1/devices/me/rpc/request/+', commandSchema, (message, topic) => {
     let requestId = topic.slice('v1/devices/me/rpc/request/'.length)
-    const payload = JSON.parse(message.toString())
-    const method = payload.method
-    const params = payload.params
-
-    console.log('request method: ', method)
-    console.log('request params: ', params)
+    let payload = message
+    console.log('payload : ', payload)
 
     let response
-    let ledState = false // example IO
-    let fanState = false // example IO
 
-    switch (method) {
+    switch (payload.method) {
         case 'getLed':
-            response = {
-                status: 'ok',
-                ledState: ledState,
-            }
+            response = { status: 'ok', ledState: ledState }
             break
         case 'setLed':
-            ledState = params
-            response = {
-                status: 'ok',
-                ledState: ledState,
-            }
+            ledState = payload.params!
+            response = { status: 'ok', ledState: ledState }
             break
         case 'getFan':
-            response = {
-                status: 'ok',
-                fanState: fanState,
-            }
+            response = { status: 'ok', fanState: fanState }
             break
         case 'setFan':
-            fanState = params
-            response = {
-                status: 'ok',
-                fanState: fanState,
-            }
+            fanState = payload.params!
+            response = { status: 'ok', fanState: fanState }
             break
         default:
-            response = {
-                status: 'error',
-                message: 'Unkwon method',
-            }
+            response = { status: 'error', message: 'Unknown method' }
             break
     }
 
-    console.log('response: ', response)
+    console.log('Response:', response)
     mqttClient.publish('v1/devices/me/rpc/response/' + requestId, JSON.stringify(response))
 })
 
