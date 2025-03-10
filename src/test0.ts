@@ -10,8 +10,8 @@ const ACCESS_TOKEN = process.env.ACCESS_TOKEN
 
 const SERIAL_PORT = '/dev/ttyV0' // 시리얼포트 번호에 맞게 변해야 한다.
 const BAUD_RATE = 9600 // baud rate에 맞게 변경해야 한다.
-const SLAVE_ID = 0
-const REGISTER_START = 0
+const SLAVE_ID = 0 // slave Id 도 맞춰야 한다.
+const REGISTER_START = 0 // 총괄님 지시에 맞게 변경
 const REGISTER_COUNT = 6
 
 // postgresql 연결
@@ -82,7 +82,7 @@ async function readModbusData() {
             await initModbus()
         }
         // Reading holding register
-        const data = await modbusClient.readHoldingRegisters(REGISTER_START, REGISTER_COUNT)
+        const data = await modbusClient.readHoldingRegisters(REGISTER_START, REGISTER_COUNT) //slave에 request 요청
         const floatData = RegistersToFloats(data.data)
         console.log('Data:', floatData)
 
