@@ -62,6 +62,9 @@ pm2 startup
 3. url 에 http://hostname:3000 입력
 4. save
 
-# grafana update 예정
+# grafana 사용법
 
+1. [hostname]:3000
+2. db 연결
+3. dashboard 작성
 ```
