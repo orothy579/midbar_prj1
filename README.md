@@ -43,7 +43,9 @@ ssh [username]@[hostname] "bash -s" < ./setup.sh
 
 #.env 파일 생성하고 .env.sample을 참고하여 작성해주세요.
 
-# ACCESS TOKEN 과 MQTT_BORKER_IP(hostname을 입력)을 적어주시면 됩니다.
+- ACCESS TOKEN 과 MQTT_BORKER_IP(hostname을 입력)을 적어주시면 됩니다.
+
+# device를 만드세요.
 
 # 실행 설정
 
