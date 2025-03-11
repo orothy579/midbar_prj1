@@ -44,4 +44,9 @@ app.get('/', (c) => {
     })
 })
 
-serve(app, { port: 4000 })
+serve({
+	fetch(request) {
+		return app.fetch(request)
+	},
+	port: 4000,
+})
