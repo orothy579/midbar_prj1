@@ -61,6 +61,7 @@ const commandSchema = zod_1.z.object({
     method: zod_1.z.string(),
     params: zod_1.z.boolean().optional(),
 });
+// RPC 통신 시뮬레이션
 router.match('v1/devices/me/rpc/request/+', commandSchema, (message, topic) => {
     let requestId = topic.slice('v1/devices/me/rpc/request/'.length);
     let payload = message;

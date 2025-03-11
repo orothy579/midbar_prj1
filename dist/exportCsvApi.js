@@ -71,4 +71,9 @@ app.get('/', (c) => {
         client.release();
     }));
 });
-(0, node_server_1.serve)(app);
+(0, node_server_1.serve)({
+    fetch(request) {
+        return app.fetch(request);
+    },
+    port: 4000,
+});

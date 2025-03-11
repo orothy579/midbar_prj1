@@ -21,7 +21,7 @@ function floatArrayToModbusRegisters(values) {
     for (let i = 0; i < values.length; i++) {
         buffer.writeFloatBE(values[i], i * 4);
     }
-    // 16비트씩 읽어서 배열에 추가
+    // 2바이트씩 읽어서 배열에 추가
     const registers = [];
     for (let i = 0; i < buffer.length; i += 2) {
         registers.push(buffer.readUInt16BE(i));
@@ -63,7 +63,7 @@ port.on('data', (data) => {
         const crcValue = crc_1.default.crc16modbus(response);
         const crcBuffer = Buffer.from([crcValue & 0xff, (crcValue >> 8) & 0xff]);
         const finalResponse = Buffer.concat([response, crcBuffer]);
-        //Master에게 응답 전송
+        // Master에게 응답 전송
         port.write(finalResponse, () => {
             console.log('Response Sent (HEX):', finalResponse.toString('hex'));
         });
