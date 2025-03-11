@@ -89,7 +89,6 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
-dist
 
 # Gatsby files
 .cache/
@@ -137,5 +136,3 @@ dist
 
 modbusData.csvcom
 node_modules
-
-./data/modbusData.csv
