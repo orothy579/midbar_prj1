@@ -95,23 +95,28 @@ sudo service thingsboard start
 
 echo "✅ ThingsBoard installation completed..." | tee -a "$LOGFILE"
 
+
+#Grafana setup
+sudo apt-get install -y apt-transport-https software-properties-common wget
+sudo mkdir -p /etc/apt/keyrings/
+wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+
+# Updates the list of available packages
+sudo apt-get update
+# Installs the latest OSS release:
+sudo apt-get install grafana -y
+sudo systemctl daemon-reload
+sudo systemctl start grafana-server
+sudo systemctl enable grafana-server.service
+
+echo "✅ grafana installation completed... " | tee -a "$LOGFILE"
+
+
 sudo npm install -g pm2
 
-#!/bin/bash
-HOME="/home/$(whoami)"
-# fnm 설치
-curl -fsSL https://fnm.vercel.app/install | bash
-
-# fnm 설치 경로 설정
-export FNM_DIR="$HOME/.local/share/fnm"
-export PATH="$FNM_DIR:$PATH"
-
-# 현재 셸에서 fnm 초기화
-eval "$(fnm env)"
-
-# Node.js 버전 22 설치 및 사용 설정
-fnm install 22
-fnm use 22
+curl -fsSL https://deb.nodesource.com/setup_current.x | sudo -E bash -
+sudo apt-get install -y nodejs
 
 # Node.js 및 npm 버전 확인
 node -v  # 예상 출력: v22.x.x
