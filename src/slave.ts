@@ -75,7 +75,7 @@ port.on('data', (data: Buffer) => {
 
         const finalResponse = Buffer.concat([response, crcBuffer])
 
-        //Master에게 응답 전송
+        // Master에게 응답 전송
         port.write(finalResponse, () => {
             console.log('Response Sent (HEX):', finalResponse.toString('hex'))
         })
