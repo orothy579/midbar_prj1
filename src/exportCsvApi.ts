@@ -44,4 +44,4 @@ app.get('/', (c) => {
     })
 })
 
-serve(app)
+serve(app, { port: 4000 })
