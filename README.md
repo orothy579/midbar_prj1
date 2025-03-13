@@ -66,5 +66,9 @@ pm2 startup
 
 1. [hostname]:3000
 2. db 연결
+  - Host URL : localhost:5000
+  - Database name : modbus
+  - User name : postgres
+  - Password : 1234
 3. dashboard 작성
 ```
